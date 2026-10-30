@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>簡易大富翁</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(5, 80px);
+      grid-template-rows: repeat(5, 80px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      background: white;
+      border: 2px solid #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      position: relative;
+    }
+    .player {
+      width: 16px;
+      height: 16px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 5px;
+    }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    #log { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>🎲 簡易大富翁</h1>
+  <p>資產：$<span id="money">1000</span></p>
+  <button onclick="rollDice()">擲骰子</button>
+
+  <div id="board"></div>
+  <div id="log">點擊按鈕開始遊戲！</div>
+
+  <script>
+    // 定義 16 個地圖格子 (外圍一圈)
+    const boardLayout = [
+      0, 1, 2, 3, 4,
+      15, -1, -1, -1, 5,
+      14, -1, -1, -1, 6,
+      13, -1, -1, -1, 7,
+      12, 11, 10, 9, 8
+    ];
+
+    const tiles = [
+      { name: "起點", price: 0 }, { name: "台北", price: 100 }, { name: "機會", price: 0 }, { name: "台中", price: 120 }, { name: "公園", price: 0 },
+      { name: "高雄", price: 150 }, { name: "命運", price: 0 }, { name: "台南", price: 130 }, { name: "監獄", price: 0 }, { name: "新竹", price: 140 },
+      { name: "機會", price: 0 }, { name: "桃園", price: 160 }, { name: "休假", price: 0 }, { name: "基隆", price: 110 }, { name: "命運", price: 0 }, { name: "宜蘭", price: 90 }
+    ];
+
+    let playerPos = 0;
+    let playerMoney = 1000;
+    const ownedTiles = {};
+
+    function renderBoard() {
+      const boardEl = document.getElementById("board");
+      boardEl.innerHTML = "";
+      boardLayout.forEach(tileIndex => {
+        const cell = document.createElement("div");
+        if (tileIndex === -1) {
+          cell.style.border = "none";
+          cell.style.background = "transparent";
+        } else {
+          cell.className = "cell";
+          const data = tiles[tileIndex];
+          cell.innerHTML = `<b>${data.name}</b>${data.price ? '$'+data.price : ''}`;
+          
+          if (tileIndex === playerPos) {
+            const p = document.createElement("div");
+            p.className = "player";
+            cell.appendChild(p);
+          }
+        }
+        boardEl.appendChild(cell);
+      });
+    }
+
+    function rollDice() {
+      const dice = Math.floor(Math.random() * 6) + 1;
+      playerPos = (playerPos + dice) % tiles.length;
+      
+      const currentTile = tiles[playerPos];
+      let msg = `你擲出了 ${dice} 點，來到【${currentTile.name}】。`;
+
+      if (currentTile.price > 0) {
+        if (!ownedTiles[playerPos]) {
+          if (playerMoney >= currentTile.price) {
+            playerMoney -= currentTile.price;
+            ownedTiles[playerPos] = true;
+            msg += ` 你花費 $${currentTile.price} 購買了這塊地！`;
+          } else {
+            msg += ` 資金不足無法購買。`;
+          }
+        } else {
+          msg += ` 這是你的地產。`;
+        }
+      }
+
+      document.getElementById("money").innerText = playerMoney;
+      document.getElementById("log").innerText = msg;
+      renderBoard();
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
